@@ -21,8 +21,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -89,6 +92,12 @@ public class WealthsimpleWear extends CanvasWatchFaceService {
         boolean mRegisteredTimeZoneReceiver = false;
         Paint mBackgroundPaint;
         Paint mTextPaint;
+        Paint mTextWealthPaint;
+
+        Bitmap lines;
+
+        Paint mimagePaint;
+
         boolean mAmbient;
         Calendar mCalendar;
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -121,11 +130,23 @@ public class WealthsimpleWear extends CanvasWatchFaceService {
             Resources resources = WealthsimpleWear.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
 
+            lines = BitmapFactory.decodeResource(getResources(),R.drawable.wealthlogo);
+            lines = BITMAP_RESIZER(lines, 400,400);
+
+            mimagePaint= new Paint();
+            mimagePaint.setAntiAlias(false);
+            mimagePaint.setFilterBitmap(false);
+
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(resources.getColor(R.color.background));
 
             mTextPaint = new Paint();
             mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
+
+
+            mTextWealthPaint = new Paint();
+            mTextWealthPaint = createTextPaint(resources.getColor(R.color.wealth_color));
+            mTextWealthPaint.setTextSize(50f);
 
             mCalendar = Calendar.getInstance();
         }
@@ -170,6 +191,25 @@ public class WealthsimpleWear extends CanvasWatchFaceService {
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
             WealthsimpleWear.this.registerReceiver(mTimeZoneReceiver, filter);
+        }
+
+        public Bitmap BITMAP_RESIZER(Bitmap bitmap,int newWidth,int newHeight) {
+            Bitmap scaledBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888);
+
+            float ratioX = newWidth / (float) bitmap.getWidth();
+            float ratioY = newHeight / (float) bitmap.getHeight();
+            float middleX = newWidth / 2.0f;
+            float middleY = newHeight / 2.0f;
+
+            Matrix scaleMatrix = new Matrix();
+            scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+
+            Canvas canvas = new Canvas(scaledBitmap);
+            canvas.setMatrix(scaleMatrix);
+            canvas.drawBitmap(bitmap, middleX - bitmap.getWidth() / 2, middleY - bitmap.getHeight() / 2, mimagePaint);
+
+            return scaledBitmap;
+
         }
 
         private void unregisterReceiver() {
@@ -262,7 +302,13 @@ public class WealthsimpleWear extends CanvasWatchFaceService {
 
             String text = String.format("%d:%02d", mCalendar.get(Calendar.HOUR),
                     mCalendar.get(Calendar.MINUTE));
-            canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+            canvas.drawText(text, bounds.centerX()-(mTextPaint.measureText(text))/2, mYOffset-10, mTextPaint);
+
+            canvas.drawBitmap(lines,bounds.centerX()-(lines.getWidth())/2,bounds.centerY()-(lines.getHeight())/2,new Paint(Paint.FILTER_BITMAP_FLAG));
+
+            //hardcoded. need to fetch portfolio balance using api
+            String balance = "$5733.04";
+            canvas.drawText (balance , bounds.centerX()-(mTextWealthPaint.measureText(balance))/2, mYOffset+120, mTextWealthPaint);
         }
 
         /**
