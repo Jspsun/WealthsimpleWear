@@ -89,6 +89,7 @@ public class WealthsimpleWear extends CanvasWatchFaceService {
         boolean mRegisteredTimeZoneReceiver = false;
         Paint mBackgroundPaint;
         Paint mTextPaint;
+        Paint mTextWealthPaint;
         boolean mAmbient;
         Calendar mCalendar;
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -126,6 +127,9 @@ public class WealthsimpleWear extends CanvasWatchFaceService {
 
             mTextPaint = new Paint();
             mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
+
+            mTextWealthPaint = new Paint();
+            mTextWealthPaint = createTextPaint(resources.getColor(R.color.wealth_color));
 
             mCalendar = Calendar.getInstance();
         }
@@ -263,6 +267,8 @@ public class WealthsimpleWear extends CanvasWatchFaceService {
             String text = String.format("%d:%02d", mCalendar.get(Calendar.HOUR),
                     mCalendar.get(Calendar.MINUTE));
             canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+
+            canvas.drawText ("$5733.04",0,0,mTextWealthPaint);
         }
 
         /**
